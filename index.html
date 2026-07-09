@@ -708,20 +708,20 @@
         backPressCount = 0; // Reset back counter
         console.log('📍 Navigation to:', pageId, 'Stack:', pageHistory); // Debug
     }
-    const officialKithabs = [
-        { id: 1, name: "صحيح البخاري" },
-        { id: 2, name: "منهج البحث" },
-        { id: 12, name: "علم الحديث" },
-        { id: 3, name: "تحفة المحتاج" },
-        { id: 4, name: "صحيح مسلم" },
-        { id: 5, name: "تحلي" },
-        { id: 6, name: "السراج المنير" },
-        { id: 7, name: "الرسالة القشيرية" },
-        { id: 13, name: "العربية المعاصرة" },
-        { id: 8, name: "محلي" },
-        { id: 9, name: "التجويد" },
-        { id: 10, name: "الفقه المعاصر" }
-    ];
+const officialKithabs = [
+  { id: 3, name: "تحفة المحتاج" },      // PEROD
+  { id: 6, name: "السراج المنير" },     // THANGAL
+  { id: 5, name: "تحلي" },              // MUTHALIB
+  { id: 1, name: "صحيح البخاري" },      // IBRAHIM
+  { id: 10, name: "الفقه المعاصر" },    // THRIKARIPPUR
+  { id: 4, name: "صحيح مسلم" },         // SAEED
+  { id: 7, name: "الرسالة القشيرية" },  // SA-ADI
+  { id: 13, name: "العربية المعاصرة" }, // SA-ADI (2nd subject)
+  { id: 8, name: "محلي" },              // UMAR
+  { id: 2, name: "منهج البحث" },        // SHAHEER
+  { id: 12, name: "علم الحديث" },       // SHAHEER (2nd subject)
+  { id: 9, name: "التجويد" }            // SURAQATH
+];
 const teachersData = [
   { id: 3, name: "PEROD USTHAD", phone: "+919947000003" },
   { id: 6, name: "THANGAL USTHAD", phone: "+919947000006" },
