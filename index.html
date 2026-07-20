@@ -2428,10 +2428,7 @@ function renderPeriodTodayLayout() {
                 </div>`;
             });
             html += `</div>`;
-            html += `<div style="display:flex; justify-content:center; gap:20px; font-weight:bold; font-size:15px; margin-top:12px; padding-top:10px; border-top:1px solid #cbd5e1;">
-                <span style="color:#16a34a;">✅ ${presentCount}</span>
-                <span style="color:#dc2626;">❌ ${absentCount}</span>
-            </div>`;
+            
             if (isAdminMode) {
                 html += `<br><button class="btn-submit" style="background:var(--secondary);" onclick="enableAdminEditMode()">📝 Edit Attendance</button>`;
             }
@@ -2489,12 +2486,8 @@ function renderPeriodTodayLayout() {
             <span style="color:#16a34a;">✅ Present: 0</span>
             <span style="color:#dc2626;">❌ Absent: 0</span>
         </div>
-        <div id="att-student-rows">${rows}</div>
-        <div id="att-count-summary-bottom" style="display:flex; justify-content:center; gap:20px; font-weight:bold; font-size:15px; margin-top:12px; padding-top:10px; border-top:1px solid #cbd5e1;">
-            <span style="color:#16a34a;">✅ 0</span>
-            <span style="color:#dc2626;">❌ 0</span>
-        </div>`;
-    }
+       
+
 
     // Recomputes present/absent totals from the current checkbox states and
     // the active P/A tick-mode, and refreshes both the top and bottom
@@ -2513,9 +2506,7 @@ function renderPeriodTodayLayout() {
         const top = document.getElementById('att-count-summary');
         if (top) top.innerHTML = `<span style="color:#16a34a;">✅ Present: ${presentCount}</span><span style="color:#dc2626;">❌ Absent: ${absentCount}</span>`;
 
-        const bottom = document.getElementById('att-count-summary-bottom');
-        if (bottom) bottom.innerHTML = `<span style="color:#16a34a;">✅ ${presentCount}</span><span style="color:#dc2626;">❌ ${absentCount}</span>`;
-    }
+   
 
     function switchAttMode(mode) {
         activeMarkMode = mode;
