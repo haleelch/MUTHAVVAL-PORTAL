@@ -109,6 +109,21 @@
         .bar-container { background: #e2e8f0; border-radius: 10px; height: 14px; width: 100%; position: relative; margin-top: 5px; overflow: hidden; }
         body.dark-mode .bar-container { background: #25332c; }
         .bar-fill { background: var(--primary); height: 100%; width: 0%; }
+        .att-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .att-cal-dow { text-align: center; font-size: 10px; font-weight: bold; color: #6b7280; padding-bottom: 2px; }
+        body.dark-mode .att-cal-dow { color: #9ca3af; }
+        .att-cal-day { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; user-select: none; }
+        .att-cal-day.empty { visibility: hidden; cursor: default; }
+        .att-cal-day.taken { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
+        body.dark-mode .att-cal-day.taken { background: #14241c; color: #4ade80; border-color: #1f3d2c; }
+        .att-cal-day.missed { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+        body.dark-mode .att-cal-day.missed { background: #241414; color: #f87171; border-color: #3d1f1f; }
+        .att-cal-day.future { background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; }
+        body.dark-mode .att-cal-day.future { background: #1c2620; color: #6b7280; border-color: #2d3d34; }
+        .att-cal-day:active { transform: scale(0.92); }
+        .att-cal-legend { display: flex; gap: 14px; justify-content: center; margin-top: 10px; font-size: 11px; color: #6b7280; }
+        .att-cal-legend span { display: inline-flex; align-items: center; gap: 5px; }
+        .att-cal-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
         iframe { width: 100%; height: 420px; border: 1px solid #cbd5e1; border-radius: 10px; }
         .pdf-frame-wrap { position:relative; width:100%; }
         .pdf-frame-wrap iframe { width:100%; height:480px; border-radius:10px; border:1px solid #cbd5e1; }
@@ -642,6 +657,7 @@
                     </div>
                 </div>
                 <div id="monthly-stats-header" style="background:#fffdf5; padding:10px; border-radius:8px; border:1px solid #fef3c7; font-weight:bold; font-size:13px; margin-bottom:15px;"></div>
+                <div id="period-attendance-calendar" style="background:var(--surface); border:1px solid #e2e8f0; padding:12px; border-radius:12px; margin-bottom:15px;"></div>
                 <div id="monthly-pdf-download-btn" style="display:none; gap:8px; margin-bottom:12px;">
                     <button class="btn-submit" style="background:#dc2626;" onclick="downloadPDFExcelReport('download')">📥 Download</button>
                     <button class="btn-submit" style="background:var(--primary);" onclick="downloadPDFExcelReport('share')">📤 Share</button>
@@ -2845,6 +2861,8 @@ function renderPeriodTodayLayout() {
                 📊 Total Conducted: ${totalConductedCount} Classes
             `;
 
+            renderAttendanceCalendar(targetMonth, storedDb);
+
             let matrixTableHtml = `<table class="report-table"><thead><tr><th>Student Name</th><th>Total Class</th><th>Present</th><th>Absent</th><th>Percentage (%)</th></tr></thead><tbody>`;
 
             forEachActiveStudent((name, idx) => {
@@ -2864,6 +2882,55 @@ function renderPeriodTodayLayout() {
             placeholder.innerHTML = `<p style="text-align:center; color:#dc2626; font-weight:bold; padding:15px 0;">⚠️ Error loading report: ${error.message}</p>`;
         });
         });
+    }
+
+    // Builds a small month calendar for the currently selected Kithab/period.
+    // Each date is colored to show whether attendance was marked (taken) or
+    // not (missed) for that period — future dates are greyed out since they
+    // can't have attendance yet. Tapping any past/today date jumps straight
+    // into that date's attendance (Today's Attendance tab).
+    function renderAttendanceCalendar(targetMonth, storedDb) {
+        const calBox = document.getElementById('period-attendance-calendar');
+        if (!calBox) return;
+        if (!targetMonth) { calBox.innerHTML = ''; return; }
+
+        const [yearStr, monthStr] = targetMonth.split('-');
+        const year = Number(yearStr);
+        const monthIdx = Number(monthStr) - 1; // 0-based
+        const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
+        const firstDow = new Date(year, monthIdx, 1).getDay(); // 0 = Sunday
+
+        const todayStr = new Date().toISOString().slice(0, 10);
+        const dowLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+        let html = `<div style="font-weight:bold; font-size:13px; color:var(--primary); margin-bottom:8px; text-align:center;">📅 Attendance Calendar</div>`;
+        html += `<div class="att-cal-grid">`;
+        dowLabels.forEach(d => { html += `<div class="att-cal-dow">${d}</div>`; });
+
+        for (let i = 0; i < firstDow; i++) { html += `<div class="att-cal-day empty"></div>`; }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${yearStr}-${monthStr}-${String(day).padStart(2, '0')}`;
+            const isTaken = !!(storedDb[dateStr] && storedDb[dateStr][targetedPeriodId]);
+            let cls = 'taken';
+            if (!isTaken) cls = (dateStr > todayStr) ? 'future' : 'missed';
+            html += `<div class="att-cal-day ${cls}" onclick="jumpToDateAttendance('${dateStr}')">${day}</div>`;
+        }
+
+        html += `</div>`;
+        html += `<div class="att-cal-legend">
+            <span><i style="background:#16a34a;"></i> Hajar ഇട്ടത്</span>
+            <span><i style="background:#dc2626;"></i> Ittittilla</span>
+            <span><i style="background:#94a3b8;"></i> Vararaya</span>
+        </div>`;
+        calBox.innerHTML = html;
+    }
+
+    // Jumps from the monthly calendar straight to that date's attendance
+    // marking/preview screen (the "Today's Attendance" tab of this period).
+    function jumpToDateAttendance(dateStr) {
+        document.getElementById('attendance-global-date').value = dateStr;
+        switchPeriodTab('today');
     }
 
     function downloadPDFExcelReport(mode) {
@@ -2912,6 +2979,7 @@ function renderPeriodTodayLayout() {
         node.style.maxWidth = '900px';
         node.style.overflow = 'visible';
         node.style.position = 'relative';
+        node.scrollLeft = 0;
 
         const table = node.querySelector('.report-table');
         const originalTableWidth = table ? table.style.width : null;
@@ -3439,15 +3507,67 @@ Features:
         const mKey = document.getElementById('teacher-report-month-picker').value;
         if (!mKey) { alert('Select a month first.'); return; }
         const filename = `Teachers_Monthly_Report_${mKey}.pdf`;
-        const worker = html2pdf().set({
-            margin: 8,
-            filename,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: ['css', 'legacy'] }
-        }).from(node);
-        finalizePDF(worker, filename, mode);
+
+        // Fix for "oro thavana share cheyyumbol oro column cut aavunna" bug:
+        // this area was previously captured at whatever narrow width the
+        // phone screen happened to render it at. On a narrow screen the
+        // report-table's columns auto-shrink to fit, and depending on how
+        // much text each column held that time (teacher name length, % text,
+        // etc.) a different column would end up squeezed past the edge and
+        // clipped. Forcing a fixed, wide layout before capture — same fix
+        // already used for the per-subject Monthly Report — makes every
+        // column render at a stable width every time.
+        const originalStyles = {
+            width: node.style.width,
+            maxWidth: node.style.maxWidth,
+            overflow: node.style.overflow,
+            position: node.style.position
+        };
+        node.style.width = '750px';
+        node.style.maxWidth = '750px';
+        node.style.overflow = 'visible';
+        node.style.position = 'relative';
+        node.scrollLeft = 0;
+
+        const table = node.querySelector('.report-table');
+        const originalTableWidth = table ? table.style.width : null;
+        if (table) table.style.width = '730px';
+
+        const rowEls = node.querySelectorAll('.report-table tr');
+        rowEls.forEach(r => { r.style.pageBreakInside = ''; r.style.breakInside = ''; });
+
+        const restoreStyles = () => {
+            node.style.width = originalStyles.width;
+            node.style.maxWidth = originalStyles.maxWidth;
+            node.style.overflow = originalStyles.overflow;
+            node.style.position = originalStyles.position;
+            if (table) table.style.width = originalTableWidth;
+            rowEls.forEach(r => { r.style.pageBreakInside = ''; r.style.breakInside = ''; });
+        };
+
+        // Give the browser a tick to apply the forced-width layout before
+        // html2canvas measures/captures it.
+        setTimeout(() => {
+            const worker = html2pdf().set({
+                margin: 8,
+                filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    windowWidth: 750,
+                    width: 750,
+                    scrollX: 0,
+                    scrollY: 0,
+                    useCORS: true,
+                    allowTaint: true,
+                    height: node.scrollHeight,
+                    windowHeight: node.scrollHeight
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak: { mode: ['css', 'legacy'] }
+            }).from(node);
+            finalizePDF(worker, filename, mode, restoreStyles);
+        }, 150);
     }
 
     function loadTimetableFrame() {
